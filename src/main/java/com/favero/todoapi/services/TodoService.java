@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class TodoService {
@@ -23,12 +24,39 @@ public class TodoService {
     }
 
     public void createTodo(TodoDTO todo) {
-        if (todo.title().isEmpty() || todo.description().isEmpty()) {
-            throw new IllegalArgumentException("Title or description are empty");
-        }
+
 
         Todo newTodo = new Todo(todo.title(), todo.description(), false, LocalDateTime.now(), LocalDateTime.now());
 
         todoRepository.save(newTodo);
+    }
+
+    public void updateTodo(long id, TodoDTO todo) {
+        Todo oldTodo = findTodoById(id).orElseThrow();
+
+
+        LocalDateTime oldTodoCreatedAtField = oldTodo.getCreatedAt();
+        boolean oldTodoIsCompletedField = oldTodo.getIsCompleted();
+
+        Todo updatedTodo = new Todo(todo.title(), todo.description(), oldTodoIsCompletedField, oldTodoCreatedAtField, LocalDateTime.now());
+        updatedTodo.setId(id);
+
+        todoRepository.save(updatedTodo);
+    }
+
+    public void removeTodo(Long id) {
+        todoRepository.deleteById(id);
+    }
+
+    public void toggleIsCompleted(long id) {
+        Todo todo = findTodoById(id).orElseThrow();
+
+        todo.setIsCompleted(!todo.getIsCompleted());
+
+        todoRepository.save(todo);
+    }
+
+    private Optional<Todo> findTodoById(long id) {
+        return todoRepository.findById(id);
     }
 }
